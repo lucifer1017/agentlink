@@ -10,10 +10,12 @@
 ```bash
 cd backend-agents
 
-# Add your Gemini API key to wrangler.toml
-# Open wrangler.toml and make sure you have:
-# [vars]
-# GEMINI_API_KEY = "your-actual-api-key"
+# Add your Gemini API key as a secret (do NOT put it in wrangler.toml)
+# In your terminal, run:
+# wrangler secret put GEMINI_API_KEY
+# (It will prompt you to enter your API key securely)
+#
+# Your wrangler.toml should NOT contain the actual key. Your Worker will access it as process.env.GEMINI_API_KEY.
 
 # Deploy
 npm run deploy

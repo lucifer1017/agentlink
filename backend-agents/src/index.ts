@@ -223,8 +223,12 @@ async function handleRequest(request: Request): Promise<Response> {
   });
 }
 
-// Export for Cloudflare Workers or Node.js
-export default handleRequest;
+// Export for Cloudflare Workers (module syntax)
+export default {
+  async fetch(request: any, env: any, ctx: any) {
+    return await handleRequest(request);
+  }
+};
 
 // For Node.js development server
 if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
