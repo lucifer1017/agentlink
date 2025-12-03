@@ -1,0 +1,52 @@
+{
+    "registry": [
+        {
+            "id": "specialist-solidity",
+            "name": "Solidity Specialist",
+            "role": "Smart Contract Developer",
+            "specialization": "solidity",
+            "rate": "0.01",
+            "currency": "ETH",
+            "url": "http://localhost:8787/specialist/solidity",
+            "capabilities": [
+                "ERC-20 token creation",
+                "ERC-721 NFT contracts",
+                "DeFi protocol development",
+                "Smart contract optimization",
+                "Gas optimization"
+            ]
+        },
+        {
+            "id": "specialist-security",
+            "name": "Security Auditor",
+            "role": "Smart Contract Security Expert",
+            "specialization": "security",
+            "rate": "0.05",
+            "currency": "ETH",
+            "url": "http://localhost:8787/specialist/security",
+            "capabilities": [
+                "Vulnerability analysis",
+                "Code auditing",
+                "Risk assessment",
+                "Security recommendations",
+                "Compliance checking"
+            ]
+        },
+        {
+            "id": "specialist-frontend",
+            "name": "Frontend Developer",
+            "role": "React/Web3 Developer",
+            "specialization": "frontend",
+            "rate": "0.02",
+            "currency": "ETH",
+            "url": "http://localhost:8787/specialist/frontend",
+            "capabilities": [
+                "React/Next.js development",
+                "Web3 integration",
+                "Wallet connection",
+                "UI/UX design",
+                "Performance optimization"
+            ]
+        }
+    ]
+}

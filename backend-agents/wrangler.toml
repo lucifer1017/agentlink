@@ -1,0 +1,12 @@
+name = "agentlink-backend"
+main = "dist/index.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.development]
+name = "agentlink-backend-dev"
+
+[vars]
+GEMINI_API_KEY = ""
+MANAGER_AGENT_URL = "http://localhost:8787/manager"
+REGISTRY_URL = "http://localhost:8787/registry"
