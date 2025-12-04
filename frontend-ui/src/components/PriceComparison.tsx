@@ -97,40 +97,40 @@ export function PriceComparison({ specialization, options, selected }: PriceComp
   };
 
   return (
-    <div className="mt-4 p-5 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl shadow-lg border border-blue-300 dark:border-blue-700 overflow-hidden relative">
+    <div className="mt-4 p-5 bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50 dark:from-indigo-950/50 dark:via-violet-950/50 dark:to-purple-950/50 rounded-xl shadow-xl border border-indigo-200/50 dark:border-indigo-800/50 overflow-hidden relative backdrop-blur-sm">
       {/* Animated background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 animate-pulse" />
+      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-purple-500/10 animate-pulse" />
       
       <div className="relative z-10">
         {/* Header with progress indicator */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-2xl animate-spin-slow">🔍</span>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg flex items-center justify-center">
+              <span className="text-xl text-white animate-spin-slow">🔍</span>
             </div>
             <div>
-              <div className="text-white font-bold text-base">
+              <div className="text-indigo-900 dark:text-indigo-100 font-bold text-base">
                 {phaseLabels[phase]}
               </div>
-              <div className="text-white/80 text-xs">
+              <div className="text-indigo-600 dark:text-indigo-400 text-xs font-medium">
                 {specialization} specialists
               </div>
             </div>
           </div>
           {phase !== "complete" && (
-            <div className="text-white/90 text-xs font-semibold">
+            <div className="text-indigo-700 dark:text-indigo-300 text-xs font-bold bg-white/60 dark:bg-indigo-900/40 px-3 py-1.5 rounded-full">
               {Math.round(progress)}%
             </div>
           )}
         </div>
 
         {/* Progress bar */}
-        <div className="mb-4 h-2 bg-white/20 rounded-full overflow-hidden">
+        <div className="mb-4 h-2.5 bg-indigo-100 dark:bg-indigo-900/40 rounded-full overflow-hidden shadow-inner">
           <div
-            className="h-full bg-gradient-to-r from-yellow-300 via-green-300 to-emerald-400 rounded-full transition-all duration-300 ease-out shadow-lg"
+            className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 rounded-full transition-all duration-300 ease-out shadow-lg relative"
             style={{ width: `${progress}%` }}
           >
-            <div className="h-full w-full bg-white/30 animate-shimmer" />
+            <div className="h-full w-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
           </div>
         </div>
 
@@ -146,12 +146,12 @@ export function PriceComparison({ specialization, options, selected }: PriceComp
             return (
               <div
                 key={option.name}
-                className={`p-4 rounded-lg border-2 backdrop-blur-sm transition-all duration-500 transform ${
+                className={`p-4 rounded-xl border-2 backdrop-blur-sm transition-all duration-500 transform ${
                   isSelected && showSelected
-                    ? "bg-green-400/90 dark:bg-green-600/90 border-green-300 dark:border-green-500 shadow-xl scale-105 ring-2 ring-green-300 dark:ring-green-400"
+                    ? "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/60 dark:to-teal-950/60 border-emerald-400 dark:border-emerald-500 shadow-2xl scale-105 ring-4 ring-emerald-200/50 dark:ring-emerald-700/50"
                     : isHighlighted
-                    ? "bg-yellow-300/80 dark:bg-yellow-600/80 border-yellow-400 dark:border-yellow-500 shadow-lg scale-[1.02]"
-                    : "bg-white/90 dark:bg-zinc-800/90 border-white/50 dark:border-zinc-700/50"
+                    ? "bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/40 dark:to-yellow-950/40 border-amber-300 dark:border-amber-600 shadow-xl scale-[1.02]"
+                    : "bg-white/80 dark:bg-zinc-800/80 border-indigo-200/60 dark:border-indigo-800/60 shadow-md hover:shadow-lg"
                 }`}
                 style={{
                   animation: "slideInUp 0.5s ease-out",
@@ -161,12 +161,12 @@ export function PriceComparison({ specialization, options, selected }: PriceComp
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     {/* Number badge */}
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all ${
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg transition-all ${
                       isSelected && showSelected
-                        ? "bg-green-500 scale-110"
+                        ? "bg-gradient-to-br from-emerald-500 to-teal-600 scale-110 ring-2 ring-emerald-300 dark:ring-emerald-600"
                         : isHighlighted
-                        ? "bg-yellow-500 scale-105"
-                        : "bg-blue-500"
+                        ? "bg-gradient-to-br from-amber-500 to-yellow-500 scale-105"
+                        : "bg-gradient-to-br from-indigo-500 to-violet-600"
                     }`}>
                       {index + 1}
                     </div>
@@ -177,7 +177,7 @@ export function PriceComparison({ specialization, options, selected }: PriceComp
                           {option.name}
                         </div>
                         {isCheapest && phase === "complete" && (
-                          <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-semibold rounded-full animate-bounce">
+                          <span className="px-2.5 py-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold rounded-full shadow-md animate-bounce">
                             ✓ Best
                           </span>
                         )}
@@ -191,13 +191,13 @@ export function PriceComparison({ specialization, options, selected }: PriceComp
                   <div className="flex flex-col items-end gap-1">
                     <div className={`text-xl font-bold transition-colors ${
                       isCheapest
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-zinc-700 dark:text-zinc-300"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-indigo-700 dark:text-indigo-300"
                     }`}>
                       {option.rate} ETH
                     </div>
                     {!isCheapest && ratePercentage > 0 && (
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <div className="text-xs text-indigo-500 dark:text-indigo-400 font-medium">
                         +{ratePercentage.toFixed(1)}%
                       </div>
                     )}
@@ -210,19 +210,19 @@ export function PriceComparison({ specialization, options, selected }: PriceComp
 
         {/* Final selection card */}
         {showSelected && phase === "complete" && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg border-2 border-green-300 dark:border-green-400 shadow-xl animate-fadeInUp">
+          <div className="mt-4 p-4 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-xl border-2 border-emerald-400 dark:border-emerald-500 shadow-2xl animate-fadeInUp backdrop-blur-sm">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center shadow-lg">
                 <span className="text-2xl">✅</span>
               </div>
               <div className="flex-1">
-                <div className="font-bold text-white text-base">
+                <div className="font-bold text-white text-base drop-shadow-sm">
                   Selected: {selected.name}
                 </div>
-                <div className="text-white/90 text-sm mt-0.5">
+                <div className="text-white/95 text-sm mt-0.5 font-medium">
                   Best price: <span className="font-bold">{selected.rate} ETH</span>
                 </div>
-                <div className="text-white/80 text-xs mt-1">
+                <div className="text-white/85 text-xs mt-1 font-mono">
                   {selected.address.slice(0, 10)}...{selected.address.slice(-8)}
                 </div>
               </div>

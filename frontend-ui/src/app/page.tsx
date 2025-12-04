@@ -23,10 +23,10 @@ export default function Home() {
       <header className="w-full border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-black dark:text-zinc-50">
+            <h1 className="text-2xl font-display font-bold text-black dark:text-zinc-50 tracking-tight">
               🤖 AgentLink
             </h1>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
               The "Upwork" for the Agentic Economy
             </p>
           </div>
@@ -59,10 +59,10 @@ export default function Home() {
         {!account ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
             <div className="text-center">
-              <h2 className="text-2xl font-semibold text-black dark:text-zinc-50 mb-2">
+              <h2 className="text-2xl font-display font-semibold text-black dark:text-zinc-50 mb-2 tracking-tight">
                 Connect Your Wallet
               </h2>
-              <p className="text-zinc-600 dark:text-zinc-400">
+              <p className="text-zinc-600 dark:text-zinc-400 font-medium">
                 Connect your wallet to start using AgentLink
               </p>
             </div>
