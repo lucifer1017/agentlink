@@ -304,7 +304,14 @@ What would you like to build or need help with?`,
       
       for (const specialist of hiredSpecialists) {
         try {
-          const jobResponse = await this.contactSpecialist(specialist, userInput);
+          // Create scope-specific job description for each specialist
+          const specialistJobDescription = this.createSpecialistJobDescription(
+            userInput, 
+            specialist.specialization, 
+            hiredSpecialists.map(s => s.specialization)
+          );
+          
+          const jobResponse = await this.contactSpecialist(specialist, specialistJobDescription);
           
           // Ensure result is a valid string
           const preview = jobResponse.result ? String(jobResponse.result).trim() : "";
@@ -380,6 +387,33 @@ What would you like to build or need help with?`,
           )
         : undefined;
 
+      // Build description and breakdown for invoice
+      let invoiceDescription = `Work completed by ${hiredSpecialists.length} specialist(s)`;
+      const invoiceBreakdown: Array<{ specialist: string; amount: string; address: string }> = [];
+      
+      if (hiredSpecialists.length > 1) {
+        // Create breakdown for each specialist
+        hiredSpecialists.forEach(specialist => {
+          const specialistInvoice = specialistInvoices.find(inv => inv.to === specialist.address);
+          if (specialistInvoice) {
+            invoiceBreakdown.push({
+              specialist: specialist.name,
+              amount: specialistInvoice.amount,
+              address: specialist.address || "",
+            });
+          } else if (specialist.rate && specialist.address) {
+            invoiceBreakdown.push({
+              specialist: specialist.name,
+              amount: specialist.rate,
+              address: specialist.address,
+            });
+          }
+        });
+        
+        const breakdownText = invoiceBreakdown.map(b => `${b.specialist} (${b.amount} ETH)`).join(", ");
+        invoiceDescription = `Work completed by ${hiredSpecialists.length} specialist(s): ${breakdownText}. Payment sent to primary specialist (${hiredSpecialists[0].name}) for distribution.`;
+      }
+
       return {
         jobId: "job-001",
         status: "completed",
@@ -389,7 +423,8 @@ What would you like to build or need help with?`,
           amount: totalAmount > 0 ? formatAmount(totalAmount) : "0.0006",
           currency: "ETH",
           to: invoiceAddress,
-          description: `Work completed by ${hiredSpecialists.length} specialist(s)`,
+          description: invoiceDescription,
+          breakdown: invoiceBreakdown.length > 0 ? invoiceBreakdown : undefined,
         },
         priceComparison: bestComparison, // Show comparison with most options for best UX
       };
@@ -592,6 +627,36 @@ Be specific about which specialist(s) are needed. For example:
 
     // If no skills detected, return empty array
     return skills;
+  }
+
+  private createSpecialistJobDescription(
+    originalRequest: string,
+    specialization: string,
+    allSpecializations: string[]
+  ): string {
+    // Create scope-specific job description
+    if (allSpecializations.length > 1) {
+      // Multiple specialists - be very specific about scope
+      if (specialization === "solidity") {
+        return `Focus ONLY on the smart contract/Solidity part of this request: ${originalRequest}
+        
+Your task: Write ONLY the Solidity smart contract code. Do NOT create frontend code, UI, or React components.
+Other specialists are handling the frontend. Provide complete, production-ready Solidity code with comments.`;
+      } else if (specialization === "frontend") {
+        return `Focus ONLY on the frontend/UI part of this request: ${originalRequest}
+        
+Your task: Write ONLY the React/Next.js frontend code. Do NOT write Solidity smart contracts.
+Other specialists are handling the smart contracts. Provide complete, production-ready React/Next.js code with Web3 integration.`;
+      } else if (specialization === "security") {
+        return `Focus ONLY on the security audit part of this request: ${originalRequest}
+        
+Your task: Audit the smart contract code for security vulnerabilities. Do NOT write new code.
+Provide a comprehensive security audit report with findings and recommendations.`;
+      }
+    }
+    
+    // Single specialist - use original request
+    return originalRequest;
   }
 
   private async contactSpecialist(

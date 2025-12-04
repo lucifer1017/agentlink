@@ -141,6 +141,32 @@ async function handleRequest(request: Request): Promise<Response> {
             to: String(response.invoice.to || ""),
             description: String(response.invoice.description || ""),
           };
+          
+          // Add breakdown if it exists
+          if (response.invoice.breakdown && Array.isArray(response.invoice.breakdown)) {
+            sanitizedResponse.invoice.breakdown = response.invoice.breakdown.map((item: any) => ({
+              specialist: String(item.specialist || ""),
+              amount: String(item.amount || "0"),
+              address: String(item.address || ""),
+            }));
+          }
+        }
+        
+        // Add priceComparison if it exists
+        if (response.priceComparison) {
+          sanitizedResponse.priceComparison = {
+            specialization: String(response.priceComparison.specialization || ""),
+            options: (response.priceComparison.options || []).map((opt: any) => ({
+              name: String(opt.name || ""),
+              rate: String(opt.rate || ""),
+              address: String(opt.address || ""),
+            })),
+            selected: {
+              name: String(response.priceComparison.selected?.name || ""),
+              rate: String(response.priceComparison.selected?.rate || ""),
+              address: String(response.priceComparison.selected?.address || ""),
+            },
+          };
         }
         
         responseJson = JSON.stringify(sanitizedResponse);

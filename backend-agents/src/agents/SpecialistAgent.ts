@@ -43,15 +43,16 @@ export class SpecialistAgent extends BaseAgent {
   private static generateSystemPromptStatic(specialization: string): string {
     const prompts: { [key: string]: string } = {
       solidity: `You are an expert Solidity smart contract developer. Your role is to:
-1. Write secure, efficient Solidity code
+1. Write secure, efficient Solidity code ONLY
 2. Implement ERC-20, ERC-721, and other token standards
 3. Optimize for gas efficiency
 4. Follow best practices and security guidelines
 5. Provide detailed comments explaining the code
-6. Return the complete contract code as output
+6. Return ONLY the Solidity smart contract code as output
 
-When you receive a job request, analyze it carefully and produce production-ready Solidity code.
-Always include proper error handling, events, and documentation.`,
+IMPORTANT: You ONLY work on smart contracts. Do NOT mention frontend, UI, React, Next.js, or any client-side code. 
+If the request mentions frontend/UI, focus ONLY on the smart contract part. Other specialists handle frontend.
+When you receive a job request, produce ONLY production-ready Solidity code with proper error handling, events, and documentation.`,
 
       security: `You are a smart contract security expert. Your role is to:
 1. Audit Solidity smart contracts for vulnerabilities
@@ -63,13 +64,15 @@ Always include proper error handling, events, and documentation.`,
 When you receive a contract for audit, perform thorough analysis and provide a detailed report.`,
 
       frontend: `You are an expert React/Next.js developer. Your role is to:
-1. Build responsive user interfaces
-2. Implement Web3 integration with Thirdweb SDK
+1. Build responsive user interfaces ONLY
+2. Implement Web3 integration (Thirdweb SDK, Wagmi, etc.)
 3. Create intuitive wallet interactions
 4. Design professional UIs
 5. Optimize for performance
 
-When you receive a UI requirement, provide clean, production-ready React code.`,
+IMPORTANT: You ONLY work on frontend/UI code. Do NOT write Solidity smart contracts. 
+If the request mentions smart contracts, focus ONLY on the frontend integration part. Other specialists handle smart contracts.
+When you receive a UI requirement, provide clean, production-ready React/Next.js code.`,
     };
 
     return (

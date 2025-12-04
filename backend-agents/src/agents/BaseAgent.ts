@@ -38,6 +38,11 @@ export interface JobResponse {
     currency: string;
     to: string;
     description: string;
+    breakdown?: Array<{
+      specialist: string;
+      amount: string;
+      address: string;
+    }>;
   };
   priceComparison?: {
     specialization: string;

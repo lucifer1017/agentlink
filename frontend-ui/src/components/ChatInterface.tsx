@@ -137,9 +137,31 @@ export function ChatInterface() {
                           </span>
                         )}
                       </div>
-                      <div className="font-mono text-xs">
-                        To: {message.jobResponse.invoice.to}
-                      </div>
+                      
+                      {/* Show breakdown if multiple specialists */}
+                      {message.jobResponse.invoice.breakdown && message.jobResponse.invoice.breakdown.length > 1 && (
+                        <div className="mt-2 p-2 bg-zinc-100 dark:bg-zinc-800 rounded text-xs">
+                          <div className="font-semibold mb-1">Payment Breakdown:</div>
+                          {message.jobResponse.invoice.breakdown.map((item, idx) => (
+                            <div key={idx} className="flex justify-between items-center py-1">
+                              <span>{item.specialist}:</span>
+                              <span className="font-mono">{item.amount} ETH</span>
+                            </div>
+                          ))}
+                          <div className="mt-2 pt-2 border-t border-zinc-300 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+                            Total payment sent to: {message.jobResponse.invoice.to.slice(0, 6)}...{message.jobResponse.invoice.to.slice(-4)}
+                            <br />
+                            <span className="text-xs">(Primary specialist will distribute to others)</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {(!message.jobResponse.invoice.breakdown || message.jobResponse.invoice.breakdown.length === 1) && (
+                        <div className="font-mono text-xs">
+                          To: {message.jobResponse.invoice.to}
+                        </div>
+                      )}
+                      
                       <div className="text-xs text-zinc-500 dark:text-zinc-400">
                         {message.jobResponse.invoice.description}
                       </div>
