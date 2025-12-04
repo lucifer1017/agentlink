@@ -7,6 +7,7 @@ import { prepareTransaction } from "thirdweb";
 import { toUnits } from "thirdweb/utils";
 import { client } from "@/client";
 import { baseSepolia } from "thirdweb/chains";
+import { PriceComparison } from "./PriceComparison";
 
 interface Message {
   id: string;
@@ -99,6 +100,13 @@ export function ChatInterface() {
                     : "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
                 }`}
               >
+                {/* Show price comparison animation if available */}
+                {message.jobResponse?.priceComparison && (
+                  <div className="mb-4">
+                    <PriceComparison {...message.jobResponse.priceComparison} />
+                  </div>
+                )}
+
                 {/* Show preview or full result based on payment status */}
                 <div className="whitespace-pre-wrap break-words">
                   {message.paymentCompleted && message.jobResponse?.fullResult
@@ -109,10 +117,25 @@ export function ChatInterface() {
                 {/* Show payment button if invoice exists and payment not completed */}
                 {message.jobResponse?.invoice && !message.paymentCompleted && (
                   <div className="mt-4 pt-4 border-t border-zinc-300 dark:border-zinc-700">
-                    <div className="text-sm font-semibold mb-2">💰 Invoice</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-semibold">💰 Invoice</div>
+                      {message.jobResponse.priceComparison && message.jobResponse.priceComparison.options.length > 1 && (
+                        <div className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full flex items-center gap-1">
+                          <span>✓</span>
+                          <span>Best Price Selected</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="text-sm space-y-1 mb-3">
-                      <div>
-                        Amount: {message.jobResponse.invoice.amount} {message.jobResponse.invoice.currency}
+                      <div className="flex items-center gap-2">
+                        <span>
+                          Amount: <span className="font-bold">{message.jobResponse.invoice.amount}</span> {message.jobResponse.invoice.currency}
+                        </span>
+                        {message.jobResponse.priceComparison && message.jobResponse.priceComparison.options.length > 1 && (
+                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                            (Compared {message.jobResponse.priceComparison.options.length} options)
+                          </span>
+                        )}
                       </div>
                       <div className="font-mono text-xs">
                         To: {message.jobResponse.invoice.to}

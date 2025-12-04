@@ -11,6 +11,19 @@ export interface JobResponse {
     to: string;
     description: string;
   };
+  priceComparison?: {
+    specialization: string;
+    options: Array<{
+      name: string;
+      rate: string;
+      address: string;
+    }>;
+    selected: {
+      name: string;
+      rate: string;
+      address: string;
+    };
+  };
 }
 
 export async function sendRequestToManager(message: string): Promise<JobResponse> {

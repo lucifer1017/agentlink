@@ -138,6 +138,18 @@ Be professional and concise in your communications with specialist agents.`,
     }
   }
 
+  async findAllSpecialists(specialization: string): Promise<AgentCard[]> {
+    const matchingSpecialists: AgentCard[] = [];
+    
+    for (const specialist of this.registry.values()) {
+      if (specialist.specialization === specialization) {
+        matchingSpecialists.push(specialist);
+      }
+    }
+    
+    return matchingSpecialists;
+  }
+
   async findWorker(specialization: string): Promise<AgentCard | null> {
     console.log(`🔍 Finding worker for specialization: ${specialization}`);
 
@@ -209,13 +221,13 @@ Be professional and concise in your communications with specialist agents.`,
         };
       }
 
-      // Step 1: Analyze the request
+      // Step 1: Extract skills from user input FIRST (more reliable than LLM analysis)
+      const requiredSkills = this.extractSkills(userInput);
+      console.log(`\n🛠️ Required skills from user input: ${requiredSkills.join(", ")}`);
+
+      // Step 2: Analyze the request (for logging/debugging, but we use user input for skills)
       const analysis = await this.analyzeRequest(userInput);
       console.log(`\n📊 Analysis: ${analysis}`);
-
-      // Step 2: Extract required skills from analysis
-      const requiredSkills = this.extractSkills(analysis);
-      console.log(`\n🛠️ Required skills: ${requiredSkills.join(", ")}`);
 
       // If no specific skills detected, ask for clarification
       if (requiredSkills.length === 0) {
@@ -233,12 +245,45 @@ What would you like to build or need help with?`,
         };
       }
 
-      // Step 3: Find and hire specialists
+      // Step 3: Find and hire specialists (with price comparison)
       const hiredSpecialists: AgentCard[] = [];
+      const priceComparisons: Array<{
+        specialization: string;
+        options: Array<{ name: string; rate: string; address: string }>;
+        selected: { name: string; rate: string; address: string };
+      }> = [];
+      
       for (const skill of requiredSkills) {
-        const specialist = await this.hireSpecialist(skill);
-        if (specialist) {
-          hiredSpecialists.push(specialist);
+        // Get all matching specialists for comparison
+        const allOptions = await this.findAllSpecialists(skill);
+        if (allOptions.length > 0) {
+          // Find cheapest
+          const cheapest = allOptions.reduce((cheapest, current) => {
+            const cheapestRate = parseFloat(cheapest.rate || "0");
+            const currentRate = parseFloat(current.rate || "0");
+            return currentRate < cheapestRate ? current : cheapest;
+          });
+          
+          // Store comparison data
+          priceComparisons.push({
+            specialization: skill,
+            options: allOptions.map(s => ({
+              name: s.name,
+              rate: s.rate,
+              address: s.address || "",
+            })),
+            selected: {
+              name: cheapest.name,
+              rate: cheapest.rate,
+              address: cheapest.address || "",
+            },
+          });
+          
+          // Hire the cheapest
+          const specialist = await this.hireSpecialist(skill);
+          if (specialist) {
+            hiredSpecialists.push(specialist);
+          }
         }
       }
 
@@ -327,6 +372,14 @@ What would you like to build or need help with?`,
         return amount.toFixed(6).replace(/\.?0+$/, '');
       };
 
+      // Include all price comparisons (not just first one)
+      // If multiple specializations, show the one with most options
+      const bestComparison = priceComparisons.length > 0 
+        ? priceComparisons.reduce((best, current) => 
+            current.options.length > best.options.length ? current : best
+          )
+        : undefined;
+
       return {
         jobId: "job-001",
         status: "completed",
@@ -338,6 +391,7 @@ What would you like to build or need help with?`,
           to: invoiceAddress,
           description: `Work completed by ${hiredSpecialists.length} specialist(s)`,
         },
+        priceComparison: bestComparison, // Show comparison with most options for best UX
       };
     } catch (error) {
       console.error("Error processing request:", error);
@@ -466,68 +520,77 @@ Be specific about which specialist(s) are needed. For example:
     );
   }
 
-  private extractSkills(analysis: string): string[] {
-    // Extract required skills from analysis text
+  private extractSkills(input: string): string[] {
+    // Extract required skills from USER INPUT (not LLM analysis to avoid false positives)
     const skills: string[] = [];
-    const lowerAnalysis = analysis.toLowerCase();
+    const lowerInput = input.toLowerCase();
 
-    // Frontend/React/UI detection (check first to avoid false positives)
-    if (
-      lowerAnalysis.includes("react") ||
-      lowerAnalysis.includes("frontend") ||
-      lowerAnalysis.includes("front-end") ||
-      lowerAnalysis.includes("ui") ||
-      lowerAnalysis.includes("component") ||
-      lowerAnalysis.includes("next.js") ||
-      lowerAnalysis.includes("nextjs") ||
-      lowerAnalysis.includes("web3") ||
-      lowerAnalysis.includes("wallet connection") ||
-      lowerAnalysis.includes("wallet integration") ||
-      lowerAnalysis.includes("user interface") ||
-      lowerAnalysis.includes("user experience") ||
-      lowerAnalysis.includes("ux") ||
-      lowerAnalysis.includes("javascript") ||
-      lowerAnalysis.includes("typescript") ||
-      lowerAnalysis.includes("html") ||
-      lowerAnalysis.includes("css") ||
-      lowerAnalysis.includes("tailwind") ||
-      lowerAnalysis.includes("dashboard") ||
-      lowerAnalysis.includes("interface")
-    ) {
+    // Check for explicit multi-skill requests (e.g., "smart contracts AND frontend")
+    const hasExplicitAnd = lowerInput.includes(" and ") || lowerInput.includes(" + ") || lowerInput.includes(" with ");
+    const mentionsBoth = (lowerInput.includes("solidity") || lowerInput.includes("smart contract")) && 
+                         (lowerInput.includes("frontend") || lowerInput.includes("next.js") || lowerInput.includes("ui"));
+    
+    // Frontend/React/UI detection
+    const frontendKeywords = [
+      "next.js", "nextjs", "next js",
+      "typescript", "tsx", "jsx",
+      "react", "reactjs",
+      "frontend", "front-end",
+      "component", "ui component",
+      "javascript", "js",
+      "html", "css",
+      "tailwind", "ui/ux", "user interface",
+      "web app", "webapp", "website",
+      "wagmi", "web3 integration",
+    ];
+    
+    const hasFrontendKeyword = frontendKeywords.some(keyword => lowerInput.includes(keyword));
+    
+    // Solidity/Smart Contract detection
+    const solidityKeywords = [
+      "solidity", "smart contract", "erc-20", "erc-721", "erc-1155",
+      "token contract", "nft contract", "defi protocol",
+      "blockchain contract", "ethereum contract", "evm contract",
+      "dapp", "dapp", "decentralized app"
+    ];
+    
+    const hasSolidityKeyword = solidityKeywords.some(keyword => lowerInput.includes(keyword));
+    
+    // If both are mentioned explicitly, add both
+    if (hasExplicitAnd || mentionsBoth) {
+      if (hasFrontendKeyword) skills.push("frontend");
+      if (hasSolidityKeyword) skills.push("solidity");
+      return skills; // Return both if explicitly requested together
+    }
+    
+    // Otherwise, check individually (but allow multiple if both are clearly present)
+    if (hasFrontendKeyword) {
       skills.push("frontend");
     }
-
-    // Solidity/Smart Contract detection
-    if (
-      lowerAnalysis.includes("solidity") ||
-      lowerAnalysis.includes("smart contract") ||
-      lowerAnalysis.includes("erc-20") ||
-      lowerAnalysis.includes("erc-721") ||
-      lowerAnalysis.includes("erc-1155") ||
-      lowerAnalysis.includes("token") ||
-      lowerAnalysis.includes("nft") ||
-      lowerAnalysis.includes("defi") ||
-      lowerAnalysis.includes("blockchain") ||
-      lowerAnalysis.includes("ethereum") ||
-      lowerAnalysis.includes("evm")
-    ) {
+    
+    if (hasSolidityKeyword) {
       skills.push("solidity");
     }
+    
+    // If dApp is mentioned and both frontend and solidity keywords exist, add both
+    if (lowerInput.includes("dapp") || lowerInput.includes("decentralized app")) {
+      if (hasFrontendKeyword && hasSolidityKeyword && skills.length < 2) {
+        if (!skills.includes("frontend")) skills.push("frontend");
+        if (!skills.includes("solidity")) skills.push("solidity");
+      }
+    }
 
-    // Security/Audit detection
-    if (
-      lowerAnalysis.includes("security") ||
-      lowerAnalysis.includes("audit") ||
-      lowerAnalysis.includes("vulnerability") ||
-      lowerAnalysis.includes("penetration") ||
-      lowerAnalysis.includes("security review") ||
-      lowerAnalysis.includes("code review")
-    ) {
+    // Security/Audit detection (only if explicitly mentioned)
+    const securityKeywords = [
+      "security audit", "audit", "vulnerability assessment",
+      "penetration test", "security review", "code audit"
+    ];
+    
+    if (securityKeywords.some(keyword => lowerInput.includes(keyword))) {
       skills.push("security");
     }
 
-    // If no skills detected, return empty array (don't default to solidity)
-    // This allows the system to properly handle unknown requests
+    // If no skills detected, return empty array
     return skills;
   }
 
