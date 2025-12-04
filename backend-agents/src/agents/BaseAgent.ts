@@ -17,6 +17,7 @@ export interface AgentCard {
   rate: string;
   currency: string;
   url: string;
+  address?: string;
   capabilities: string[];
 }
 
@@ -30,7 +31,8 @@ export interface JobRequest {
 export interface JobResponse {
   jobId: string;
   status: "completed" | "failed" | "in_progress";
-  result: string;
+  result: string; // Preview/description shown before payment
+  fullResult?: string; // Full code/work shown after payment
   invoice?: {
     amount: string;
     currency: string;
@@ -64,7 +66,7 @@ export class BaseAgent {
         model: this.model,
         prompt: fullPrompt,
         temperature: 0.7,
-        maxTokens: 2000,
+        maxTokens: 8000, // Increased for full smart contracts and detailed responses
       });
 
       return response.text;

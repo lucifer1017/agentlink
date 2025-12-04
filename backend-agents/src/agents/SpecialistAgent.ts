@@ -3,13 +3,15 @@ import { BaseAgent, JobResponse, AgentCard } from "./BaseAgent";
 export class SpecialistAgent extends BaseAgent {
   private specialization: string;
   private rate: string;
+  private address: string;
   private agentCard: AgentCard;
 
   constructor(
     specialization: string,
     rate: string,
     apiKey: string,
-    url: string
+    url: string,
+    address: string
   ) {
     const specType = specialization.charAt(0).toUpperCase() + specialization.slice(1);
     const systemPrompt = SpecialistAgent.generateSystemPromptStatic(specialization);
@@ -24,6 +26,7 @@ export class SpecialistAgent extends BaseAgent {
 
     this.specialization = specialization;
     this.rate = rate;
+    this.address = address;
     this.agentCard = {
       id: `specialist-${specialization}`,
       name: this.config.name,
@@ -32,6 +35,7 @@ export class SpecialistAgent extends BaseAgent {
       rate: rate,
       currency: "ETH",
       url: url,
+      address: address,
       capabilities: this.getCapabilities(specialization),
     };
   }
@@ -117,21 +121,33 @@ When you receive a UI requirement, provide clean, production-ready React code.`,
     );
 
     try {
-      // Generate the work output
-      const output = await this.generateResponse(jobDescription);
+      // Generate preview first (brief description of what will be delivered)
+      const previewPrompt = `Provide a brief professional preview/description (2-3 sentences) of what you will deliver for this job: ${jobDescription}. 
+      This preview will be shown to the client before payment. Be concise but informative.`;
+      
+      const preview = await this.generateResponse(previewPrompt, 
+        "Keep it brief - 2-3 sentences maximum. This is a preview shown before payment."
+      );
+
+      // Generate the full work output
+      const fullOutput = await this.generateResponse(jobDescription,
+        `Provide the complete, production-ready work. Include all code, documentation, and details. 
+        This is the full deliverable that will be shown after payment.`
+      );
 
       // Create invoice
       const invoice = {
         amount: this.rate,
         currency: "ETH",
-        to: "0x0000000000000000000000000000000000000000",
+        to: this.address,
         description: `${this.specialization} work completed`,
       };
 
       return {
         jobId: "job-001",
         status: "completed",
-        result: output,
+        result: preview, // Preview shown before payment
+        fullResult: fullOutput, // Full code shown after payment
         invoice: invoice,
       };
     } catch (error) {

@@ -7,5 +7,6 @@ compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
 name = "agentlink-backend-dev"
 
 [vars]
-MANAGER_AGENT_URL = "http://localhost:8787/manager"
-REGISTRY_URL = "http://localhost:8787/registry"
+BASE_URL = "https://agentlink-backend.agentlink.workers.dev"
+MANAGER_AGENT_URL = "https://agentlink-backend.agentlink.workers.dev/manager"
+REGISTRY_URL = "https://agentlink-backend.agentlink.workers.dev/registry"

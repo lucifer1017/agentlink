@@ -11,33 +11,59 @@ if (!GOOGLE_GENERATIVE_AI_API_KEY) {
   );
 }
 
+// Get base URL from environment (for Cloudflare Workers) or use localhost for local dev
+const BASE_URL = process.env.BASE_URL || "http://localhost:8787";
+
+// Create specialist agents map for direct calls
+const specialistAgentsMap = new Map<string, SpecialistAgent>();
+
 // Create agents
-const managerAgent = new ManagerAgent(GOOGLE_GENERATIVE_AI_API_KEY);
+const managerAgent = new ManagerAgent(GOOGLE_GENERATIVE_AI_API_KEY, specialistAgentsMap);
 
 // Specialist agents (these would typically run as separate workers in production)
 const solicityCoder = new SpecialistAgent(
   "solidity",
-  "0.01",
+  "0.0006",
   GOOGLE_GENERATIVE_AI_API_KEY,
-  "http://localhost:8787/specialist/solidity"
+  `${BASE_URL}/specialist/solidity`,
+  "0xef1562c87973f9013721c37d3af26d6c9baf6ee3"
 );
 
 const securityAuditor = new SpecialistAgent(
   "security",
-  "0.05",
+  "0.0008",
   GOOGLE_GENERATIVE_AI_API_KEY,
-  "http://localhost:8787/specialist/security"
+  `${BASE_URL}/specialist/security`,
+  "0x68031f3974f6fbe580b607ffd1435b669ac190ff"
 );
 
 const frontendDev = new SpecialistAgent(
   "frontend",
-  "0.02",
+  "0.0007",
   GOOGLE_GENERATIVE_AI_API_KEY,
-  "http://localhost:8787/specialist/frontend"
+  `${BASE_URL}/specialist/frontend`,
+  "0xd91f1c11e7f6d0d4df5f8da3d2193c34f5cf216c"
 );
+
+// Add specialists to map for direct Manager calls
+specialistAgentsMap.set("solidity", solicityCoder);
+specialistAgentsMap.set("security", securityAuditor);
+specialistAgentsMap.set("frontend", frontendDev);
+
+// CORS headers helper
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
 
 // Simple HTTP server for demonstration
 async function handleRequest(request: Request): Promise<Response> {
+  // Handle CORS preflight
+  if (request.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   const url = new URL(request.url);
   const pathname = url.pathname;
 
@@ -55,7 +81,10 @@ async function handleRequest(request: Request): Promise<Response> {
         },
       }),
       {
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
       }
     );
   }
@@ -69,7 +98,7 @@ async function handleRequest(request: Request): Promise<Response> {
       if (!userInput) {
         return new Response(
           JSON.stringify({ error: "Missing 'message' field" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
 
@@ -84,8 +113,66 @@ async function handleRequest(request: Request): Promise<Response> {
       console.log(`✅ Request processed`);
       console.log(`${"=".repeat(60)}\n`);
 
-      return new Response(JSON.stringify(response), {
-        headers: { "Content-Type": "application/json" },
+      // Ensure response is valid and can be serialized
+      let responseJson: string;
+      try {
+        // Validate response structure
+        if (!response || typeof response !== 'object') {
+          throw new Error("Invalid response structure from Manager Agent");
+        }
+        
+        // Sanitize response to ensure all fields are JSON-serializable
+        const sanitizedResponse: any = {
+          jobId: response.jobId || "job-001",
+          status: response.status || "completed",
+          result: response.result ? String(response.result) : "",
+        };
+        
+        // Add fullResult if it exists
+        if (response.fullResult) {
+          sanitizedResponse.fullResult = String(response.fullResult);
+        }
+        
+        // Add invoice if it exists
+        if (response.invoice) {
+          sanitizedResponse.invoice = {
+            amount: String(response.invoice.amount || "0"),
+            currency: String(response.invoice.currency || "ETH"),
+            to: String(response.invoice.to || ""),
+            description: String(response.invoice.description || ""),
+          };
+        }
+        
+        responseJson = JSON.stringify(sanitizedResponse);
+        
+        // Validate JSON can be parsed back
+        const parsed = JSON.parse(responseJson);
+        if (!parsed.result) {
+          throw new Error("Response missing required 'result' field after sanitization");
+        }
+      } catch (jsonError) {
+        console.error("Error serializing response:", jsonError);
+        console.error("Response object:", response);
+        return new Response(
+          JSON.stringify({
+            jobId: "job-error",
+            status: "failed",
+            result: `Error serializing response: ${jsonError instanceof Error ? jsonError.message : "Unknown error"}`,
+          }),
+          {
+            headers: { 
+              "Content-Type": "application/json",
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+
+      return new Response(responseJson, {
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
       });
     } catch (error) {
       console.error("Error processing manager request:", error);
@@ -94,7 +181,7 @@ async function handleRequest(request: Request): Promise<Response> {
           error:
             error instanceof Error ? error.message : "Internal server error",
         }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
   }
@@ -113,12 +200,12 @@ async function handleRequest(request: Request): Promise<Response> {
       const agent = agents[type];
       if (agent) {
         return new Response(JSON.stringify(agent.getAgentCard()), {
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
       return new Response(JSON.stringify({ error: "Specialist not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -131,7 +218,7 @@ async function handleRequest(request: Request): Promise<Response> {
         if (!jobDescription) {
           return new Response(
             JSON.stringify({ error: "Missing 'job' field" }),
-            { status: 400, headers: { "Content-Type": "application/json" } }
+            { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
           );
         }
 
@@ -139,7 +226,7 @@ async function handleRequest(request: Request): Promise<Response> {
         if (!agent) {
           return new Response(JSON.stringify({ error: "Specialist not found" }), {
             status: 404,
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...corsHeaders },
           });
         }
 
@@ -147,7 +234,7 @@ async function handleRequest(request: Request): Promise<Response> {
         const response = await agent.processJob(jobDescription);
 
         return new Response(JSON.stringify(response), {
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       } catch (error) {
         console.error("Error processing specialist job:", error);
@@ -156,7 +243,7 @@ async function handleRequest(request: Request): Promise<Response> {
             error:
               error instanceof Error ? error.message : "Internal server error",
           }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
     }
@@ -173,7 +260,7 @@ async function handleRequest(request: Request): Promise<Response> {
         ],
       }),
       {
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   }
@@ -187,7 +274,7 @@ async function handleRequest(request: Request): Promise<Response> {
       if (!userRequest) {
         return new Response(
           JSON.stringify({ error: "Missing 'request' field" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
 
@@ -203,7 +290,7 @@ async function handleRequest(request: Request): Promise<Response> {
       console.log(`${"=".repeat(60)}\n`);
 
       return new Response(JSON.stringify(result), {
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     } catch (error) {
       console.error("Error in workflow:", error);
@@ -212,7 +299,7 @@ async function handleRequest(request: Request): Promise<Response> {
           error:
             error instanceof Error ? error.message : "Internal server error",
         }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
   }
@@ -220,7 +307,7 @@ async function handleRequest(request: Request): Promise<Response> {
   // 404
   return new Response(JSON.stringify({ error: "Endpoint not found" }), {
     status: 404,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 }
 
