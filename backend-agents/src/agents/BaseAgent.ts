@@ -45,7 +45,9 @@ export class BaseAgent {
 
   constructor(config: AgentConfig) {
     this.config = config;
-    this.model = google(config.model || "gemini-1.5-flash");
+    // Use gemini-2.5-flash which is the latest stable model
+    const modelName = config.model || "gemini-2.5-flash";
+    this.model = google(modelName);
   }
 
   protected async generateResponse(

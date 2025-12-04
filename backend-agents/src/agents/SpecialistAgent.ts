@@ -19,7 +19,7 @@ export class SpecialistAgent extends BaseAgent {
       role: specialization,
       systemPrompt: systemPrompt,
       apiKey: apiKey,
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
     });
 
     this.specialization = specialization;

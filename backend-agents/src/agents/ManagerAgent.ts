@@ -20,7 +20,7 @@ When you need help, you have access to a find_worker tool that searches the regi
 Always be clear about what work needs to be done and the timeline.
 Be professional and concise in your communications with specialist agents.`,
       apiKey: apiKey,
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
     });
   }
 

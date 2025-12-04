@@ -2,36 +2,37 @@ import { ManagerAgent } from "./agents/ManagerAgent";
 import { SpecialistAgent } from "./agents/SpecialistAgent";
 
 // Initialize agents with API key from environment
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+// With nodejs_compat_populate_process_env, secrets are available via process.env
+const GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
 
-if (!GEMINI_API_KEY) {
+if (!GOOGLE_GENERATIVE_AI_API_KEY) {
   console.warn(
-    "⚠️  GEMINI_API_KEY not set. Set it in environment or wrangler.toml [vars]"
+    "⚠️  GOOGLE_GENERATIVE_AI_API_KEY not set. Set it with: npx wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY"
   );
 }
 
 // Create agents
-const managerAgent = new ManagerAgent(GEMINI_API_KEY);
+const managerAgent = new ManagerAgent(GOOGLE_GENERATIVE_AI_API_KEY);
 
 // Specialist agents (these would typically run as separate workers in production)
 const solicityCoder = new SpecialistAgent(
   "solidity",
   "0.01",
-  GEMINI_API_KEY,
+  GOOGLE_GENERATIVE_AI_API_KEY,
   "http://localhost:8787/specialist/solidity"
 );
 
 const securityAuditor = new SpecialistAgent(
   "security",
   "0.05",
-  GEMINI_API_KEY,
+  GOOGLE_GENERATIVE_AI_API_KEY,
   "http://localhost:8787/specialist/security"
 );
 
 const frontendDev = new SpecialistAgent(
   "frontend",
   "0.02",
-  GEMINI_API_KEY,
+  GOOGLE_GENERATIVE_AI_API_KEY,
   "http://localhost:8787/specialist/frontend"
 );
 
