@@ -18,9 +18,15 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-black">
-      {/* Header */}
-      <header className="w-full border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+    <div className="flex min-h-screen flex-col bg-white font-sans dark:bg-zinc-950 relative overflow-hidden">
+      {/* Clean white base - no grey overlays */}
+      {/* Subtle fluorescent accents only */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-300/10 dark:bg-cyan-500/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-pink-300/10 dark:bg-pink-500/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-yellow-300/8 dark:bg-yellow-500/6 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="w-full border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-display font-bold text-black dark:text-zinc-50 tracking-tight">
@@ -52,10 +58,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
+        {/* Main Content */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8 relative z-10">
         {!account ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
             <div className="text-center">
@@ -73,6 +79,7 @@ export default function Home() {
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }

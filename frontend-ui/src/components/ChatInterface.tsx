@@ -194,7 +194,7 @@ export function ChatInterface() {
                         </div>
 
                         {/* Visual Breakdown - Enhanced */}
-                        {message.jobResponse.invoice.breakdown && message.jobResponse.invoice.breakdown.length > 1 ? (
+                        {message.jobResponse?.invoice?.breakdown && message.jobResponse.invoice.breakdown.length > 1 ? (
                           <div className="space-y-3">
                             <div className="flex items-center gap-2">
                               <div className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
@@ -205,7 +205,8 @@ export function ChatInterface() {
                             
                             <div className="space-y-2">
                               {message.jobResponse.invoice.breakdown.map((item, idx) => {
-                                const totalAmount = parseFloat(message.jobResponse.invoice.amount);
+                                const invoice = message.jobResponse!.invoice;
+                                const totalAmount = parseFloat(invoice.amount);
                                 const itemAmount = parseFloat(item.amount);
                                 const percentage = totalAmount > 0 ? (itemAmount / totalAmount) * 100 : 0;
                                 
